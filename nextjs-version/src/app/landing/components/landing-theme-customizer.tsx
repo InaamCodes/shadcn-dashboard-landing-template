@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { useThemeManager } from '@/hooks/use-theme-manager'
 import { useCircularTransition } from '@/hooks/use-circular-transition'
-import { colorThemes, tweakcnThemes } from '@/config/theme-data'
+import { colorThemes, tweakcnThemes, themePresets } from '@/config/theme-data'
 import { radiusOptions, baseColors } from '@/config/theme-customizer-constants'
 import { ColorPicker } from '@/components/color-picker'
 import { ImportModal } from '@/components/theme-customizer/import-modal'
@@ -40,6 +40,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
 
   const [selectedTheme, setSelectedTheme] = React.useState("default")
   const [selectedTweakcnTheme, setSelectedTweakcnTheme] = React.useState("")
+  const [selectedThemePreset, setSelectedThemePreset] = React.useState("")
   const [selectedRadius, setSelectedRadius] = React.useState("0.5rem")
   const [importModalOpen, setImportModalOpen] = React.useState(false)
   const [importedTheme, setImportedTheme] = React.useState<ImportedTheme | null>(null)
@@ -48,6 +49,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
     // Reset all state variables to initial values
     setSelectedTheme("")
     setSelectedTweakcnTheme("")
+    setSelectedThemePreset("")
     setSelectedRadius("0.5rem")
     setImportedTheme(null)
     setBrandColorsValues({})
@@ -62,6 +64,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
     // Clear other selections to indicate custom import is active
     setSelectedTheme("")
     setSelectedTweakcnTheme("")
+    setSelectedThemePreset("")
 
     // Apply the imported theme
     applyImportedTheme(themeData, isDarkMode)
@@ -76,6 +79,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
     const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)]
     setSelectedTheme(randomTheme.value)
     setSelectedTweakcnTheme("")
+    setSelectedThemePreset("")
     setBrandColorsValues({})
     setImportedTheme(null)
     applyTheme(randomTheme.value, isDarkMode)
@@ -86,6 +90,18 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
     const randomTheme = tweakcnThemes[Math.floor(Math.random() * tweakcnThemes.length)]
     setSelectedTweakcnTheme(randomTheme.value)
     setSelectedTheme("")
+    setSelectedThemePreset("")
+    setBrandColorsValues({})
+    setImportedTheme(null)
+    applyTweakcnTheme(randomTheme.preset, isDarkMode)
+  }
+
+  const handleRandomThemePreset = () => {
+    // Apply a random color theme preset
+    const randomTheme = themePresets[Math.floor(Math.random() * themePresets.length)]
+    setSelectedThemePreset(randomTheme.value)
+    setSelectedTheme("")
+    setSelectedTweakcnTheme("")
     setBrandColorsValues({})
     setImportedTheme(null)
     applyTweakcnTheme(randomTheme.preset, isDarkMode)
@@ -117,8 +133,13 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
       if (selectedPreset) {
         applyTweakcnTheme(selectedPreset, isDarkMode)
       }
+    } else if (selectedThemePreset) {
+      const selectedPreset = themePresets.find(t => t.value === selectedThemePreset)?.preset
+      if (selectedPreset) {
+        applyTweakcnTheme(selectedPreset, isDarkMode)
+      }
     }
-  }, [isDarkMode, importedTheme, selectedTheme, selectedTweakcnTheme, applyImportedTheme, applyTheme, applyTweakcnTheme])
+  }, [isDarkMode, importedTheme, selectedTheme, selectedTweakcnTheme, selectedThemePreset, applyImportedTheme, applyTheme, applyTweakcnTheme])
 
   return (
     <>
@@ -194,6 +215,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
               <Select value={selectedTheme} onValueChange={(value) => {
                 setSelectedTheme(value)
                 setSelectedTweakcnTheme("")
+                setSelectedThemePreset("")
                 setBrandColorsValues({})
                 setImportedTheme(null)
                 applyTheme(value, isDarkMode)
@@ -248,6 +270,7 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
               <Select value={selectedTweakcnTheme} onValueChange={(value) => {
                 setSelectedTweakcnTheme(value)
                 setSelectedTheme("")
+                setSelectedThemePreset("")
                 setBrandColorsValues({})
                 setImportedTheme(null)
                 const selectedPreset = tweakcnThemes.find(t => t.value === value)?.preset
@@ -261,6 +284,64 @@ export function LandingThemeCustomizer({ open, onOpenChange }: LandingThemeCusto
                 <SelectContent className="max-h-60">
                   <div className="p-2">
                     {tweakcnThemes.map((theme) => (
+                      <SelectItem key={theme.value} value={theme.value} className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <div
+                              className="w-3 h-3 rounded-full border border-border/20"
+                              style={{ backgroundColor: theme.preset.styles.light.primary }}
+                            />
+                            <div
+                              className="w-3 h-3 rounded-full border border-border/20"
+                              style={{ backgroundColor: theme.preset.styles.light.secondary }}
+                            />
+                            <div
+                              className="w-3 h-3 rounded-full border border-border/20"
+                              style={{ backgroundColor: theme.preset.styles.light.accent }}
+                            />
+                            <div
+                              className="w-3 h-3 rounded-full border border-border/20"
+                              style={{ backgroundColor: theme.preset.styles.light.muted }}
+                            />
+                          </div>
+                          <span>{theme.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </div>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+
+            {/* Theme Presets */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Theme Presets</Label>
+                <Button variant="outline" size="sm" onClick={handleRandomThemePreset} className="cursor-pointer">
+                  <Dices className="h-3.5 w-3.5 mr-1.5" />
+                  Random
+                </Button>
+              </div>
+
+              <Select value={selectedThemePreset} onValueChange={(value) => {
+                setSelectedThemePreset(value)
+                setSelectedTheme("")
+                setSelectedTweakcnTheme("")
+                setBrandColorsValues({})
+                setImportedTheme(null)
+                const selectedPreset = themePresets.find(t => t.value === value)?.preset
+                if (selectedPreset) {
+                  applyTweakcnTheme(selectedPreset, isDarkMode)
+                }
+              }}>
+                <SelectTrigger className="w-full cursor-pointer">
+                  <SelectValue placeholder="Choose Theme Preset" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <div className="p-2">
+                    {themePresets.map((theme) => (
                       <SelectItem key={theme.value} value={theme.value} className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-1">
